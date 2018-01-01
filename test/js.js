@@ -4,11 +4,14 @@ window.onerror = function(e) {
 
 var a = new JsCvs({
   width: 512,
-  height: 512
+  height: 512,
+  rendering: "pixelated"
 });
 
-a.appendTo(document.body);
-
-a.forEach(function(x) {
-  a.set(x, x*x % 0x1000000);
+a.forEachXY(function(x, y) {
+  a.set(x, y, 
+    (x / y * 0xFFFFFF) % 0x1000000
+  );
 });
+
+a.toImg(true).appendTo(document.body);

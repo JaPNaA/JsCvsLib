@@ -15,7 +15,7 @@ class JsCvs {
         
           this.element.width = e;
           if(this.highDPI) {
-            this.element.style.width = e / this.dpi + "px";
+            this.element.style.width = e / this.dpr + "px";
           } else {
             this.element.style.width = e + "px";
           }
@@ -31,7 +31,7 @@ class JsCvs {
           
           this.element.height = e;
           if(this.highDPI) {
-            this.element.style.height = e / this.dpi + "px";
+            this.element.style.height = e / this.dpr + "px";
           } else {
             this.element.style.height = e + "px";
           }
@@ -54,8 +54,8 @@ class JsCvs {
           this._highDPI = !!e;
           
           if(this.highDPI) {
-            this.element.style.width = this.width / this.dpi + "px";
-            this.element.style.height = this.height / this.dpi + "px";
+            this.element.style.width = this.width / this.dpr + "px";
+            this.element.style.height = this.height / this.dpr + "px";
           } else {
             this.element.style.width = this.width + "px";
             this.element.style.height = this.height + "px";
@@ -71,8 +71,8 @@ class JsCvs {
             this._pre.height = this.height;
           
             if(this.highDPI) {
-              this.width = innerWidth * this.dpi;
-              this.height = innerHeight * this.dpi;
+              this.width = innerWidth * this.dpr;
+              this.height = innerHeight * this.dpr;
             } else {
               this.width = innerWidth;
               this.height = innerHeight;
@@ -99,6 +99,18 @@ class JsCvs {
           }
         }
       },
+      rendering: {
+        get: () => this.element.style.imageRendering,
+        set: function(e) {
+          this.element.style.imageRendering = e;
+        }
+      },
+      filter: {
+        get: () => this.element.style.filter,
+        set: function(e) {
+          this.element.style.filter = e;
+        }
+      }, 
       RANDOM: {
         get: () => Math.floor(Math.random() * 16777216)
       }
@@ -108,19 +120,31 @@ class JsCvs {
     this.context = this.element.getContext("2d");
     
     this._pre = {};
+    this.obs = [];
+    
+    function undefT(e) {
+      if(e === undefined) {
+        return true;
+      }
+      
+      return e;
+    }
     
     this.width = o.width || 300;
     this.height = o.height || 150;
-    this.dpi = window.devicePixelRatio;
-    this.highDPI = this.dpi;
+    this.dpr = window.devicePixelRatio;
+    this.highDPI = this.dpr;
     this.maximized = o.maximize || false;
     this.preventDefault = o.preventDefault || false;
-    this.noRedrawOnResize = o.noRedrawOnResize || false;
+    this.redrawOnResize = undefT(o.redrawOnResize);
+    this.rendering = o.rendering;
+    this.filter = o.filter;
+    this.clearOnDraw = undefT(o.clearOnDraw);
     
     addEventListener("resize", function() {
-      if(that.maximized && !that.noRedrawOnResize) {
-        that.element.width = innerWidth * that.dpi;
-        that.element.height = innerHeight * that.dpi;
+      if(that.maximized && !that.redrawOnResize) {
+        that.element.width = innerWidth * that.dpr;
+        that.element.height = innerHeight * that.dpr;
       }
     });
     
@@ -149,6 +173,10 @@ class JsCvs {
   rect(x, y, w, h, c) {
     this.color = c;
     this.context.fillRect(x, y, w, h);
+    return ["rect", x, y, w, h, c];
+  }
+  circle(x, y, c) {
+    //
   }
   clear() {
     this.context.clearRect(0, 0, this.width, this.height);
@@ -184,9 +212,35 @@ class JsCvs {
       c(y, h);
     }
   }
-  toImg() {
+  toImg(e) {
     var a = document.createElement("img");
     a.src = this.element.toDataURL("img/png");
+    
+    if(e) {
+      a.style = this.element.style.cssText;
+    }
+    a.appendTo = function(e) {
+      e.appendChild(this);
+    };
     return a;
+  }
+  drawObs() {
+    if(this.clearOnDraw) this.clear();
+    
+    for(let i of this.obs) {
+      this.draw(i);
+    }
+  }
+  draw(e) {
+    e.constructor.apply(this, e.args);
+  }
+  add(e) {
+    this.obs.push(this.make(e));
+  }
+  make(i) {
+    return {
+      constructor: this[i[0]],
+      args: i.slice(1, i.length)
+    }
   }
 }

@@ -14,7 +14,7 @@ Properties:
   .highDPI (Boolean)
     is resizing canvas for high pixel ratio devices?
 
-  .dpi (undefined or Number)
+  .dpr (undefined or Number)
     window.devicePixelRatio
 
   .element (DOMElement)
@@ -33,6 +33,18 @@ Properties:
   .preventDefault (Boolean) 
     prevent default events when focused on canvas
     or window, when maximized
+
+  .redrawOnResize (Boolean)
+    automatically redraw when resize when maximized
+
+  .rendering (String)
+    css style of .element "image-rendering"
+
+  .filter (String)
+    css style of .element "filter"
+
+  .clearOnDraw (Boolean)
+    auto clear canvas on .drawObs()
     
 Methods
   .appendTo( DOMElement element )
@@ -64,13 +76,22 @@ Methods
   .forEachY( Function callback(Number y, Number height) )
     cycles through all Y pixels
 
-  .toImage()
+  .toImage( Boolean copyStyles )
     returns DOMElementIMG with current canvas state
+    with same inline-styles if copyStyles
+
+  .add( JsCvsObj )
+    adds item to obs array
+
+  .drawObs()
+    
 
 Constructor
   new JsCvs(Object options)
-    options
+    options (optional)
        int width: width of canvas
        int height: height of canvas
        bool maximize: is covering entire window, overrides width/height
        bool noRedrawOnResize: prevent redrawing on resize while maximized
+       bool rendering: set <canvas> css image-rendering
+       bool clearOnDraw: auto clear on drawObs
